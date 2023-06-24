@@ -115,12 +115,32 @@ HANDLE CreateProcess(
 // No module name (use command line), Command line, Process handle not inheritable, Thread handle not inheritable, Set handle inheritance to FALSE, No creation flags, Use parent's environment block, Use parent's starting directory, Pointer to STARTUPINFO structure, Pointer to PROCESS_INFORMATION structure
 CreateProcess( NULL, argv[1], NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi); 
 ```
+[WinExec](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-winexec)
+```c
+UINT WinExec(
+  [in] LPCSTR lpCmdLine,
+  [in] UINT   uCmdShow
+); // Runs the specified application.
+```
+```c
+result = WinExec(L"C:\\Windows\\System32\\cmd.exe", SW_SHOWNORMAL);
+```
 [TerminateProcess](https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-terminateprocess)
 ```c
 BOOL TerminateProcess(
   HANDLE hProcess,
   UINT uExitCode
 ); // Terminates the specified process.
+```
+[ExitWindowsEx](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-exitwindowsex)
+```c
+BOOL ExitWindowsEx(
+  [in] UINT  uFlags,
+  [in] DWORD dwReason
+); // Logs off the interactive user, shuts down the system, or shuts down and restarts the system.
+```
+```c
+bResult = ExitWindowsEx(EWX_REBOOT, SHTDN_REASON_MAJOR_APPLICATION);
 ```
 [CreateToolhelp32Snapshot](https://learn.microsoft.com/en-us/windows/win32/api/tlhelp32/nf-tlhelp32-createtoolhelp32snapshot)
 ```c
@@ -156,6 +176,20 @@ BOOL WriteProcessMemory(
 ```c
 WriteProcessMemory(hProc, pRemoteCode, (PVOID)payload, (SIZE_T)payload_len, (SIZE_T *)NULL); // pRemoteCode from VirtualAllocEx
 ```
+[ReadProcessMemory](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-readprocessmemory)
+```c
+BOOL ReadProcessMemory(
+  [in]  HANDLE  hProcess,
+  [in]  LPCVOID lpBaseAddress,
+  [out] LPVOID  lpBuffer,
+  [in]  SIZE_T  nSize,
+  [out] SIZE_T  *lpNumberOfBytesRead
+); // ReadProcessMemory copies the data in the specified address range from the address space of the specified process into the specified buffer of the current process.
+```
+```c
+bResult = ReadProcessMemory(pHandle, (void*)baseAddress, &address, sizeof(address), 0);
+```
+
 ### Memory Management
 [VirtualAlloc](https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualalloc)
 ```c
