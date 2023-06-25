@@ -269,6 +269,23 @@ HANDLE CreateRemoteThread(
 ```c
 hThread = CreateRemoteThread(hProc, NULL, 0, pRemoteCode, NULL, 0, NULL); // pRemoteCode from VirtualAllocEx filled by WriteProcessMemory
 ```
+[CreateRemoteThreadEx](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createremotethreadex)
+```c
+HANDLE CreateRemoteThreadEx(
+  [in]            HANDLE                       hProcess,
+  [in, optional]  LPSECURITY_ATTRIBUTES        lpThreadAttributes,
+  [in]            SIZE_T                       dwStackSize,
+  [in]            LPTHREAD_START_ROUTINE       lpStartAddress,
+  [in, optional]  LPVOID                       lpParameter,
+  [in]            DWORD                        dwCreationFlags,
+  [in, optional]  LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList,
+  [out, optional] LPDWORD                      lpThreadId
+); // Creates a thread that runs in the virtual address space of another process and optionally specifies extended attributes such as processor group affinity.
+   // See InitializeProcThreadAttributeList
+```
+```c
+hThread = CreateRemoteThread(hProc, NULL, 0, pRemoteCode, NULL, 0, lpAttributeList, NULL); // pRemoteCode from VirtualAllocEx filled by WriteProcessMemory
+```
 [ExitThread](https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-exitthread)
 ```c
 VOID ExitThread(
