@@ -1,6 +1,6 @@
 <div align="center">
   
-  ![API CheatSheets](https://github.com/snowcra5h/windows-api-function-cheatsheets/assets/90065760/f20d276b-68be-481f-a17e-5c6fa4960331)
+![API CheatSheets](https://github.com/7etsuo/windows-api-function-cheatsheets/assets/90065760/5cd8aa72-377b-4163-8ec9-0046bdacd5eb)
 
 </div>
 
@@ -9,7 +9,7 @@
 # Windows API Function Cheatsheets
 <h3>Contact</h3>
 
-🌨️ Snowcrash: [snowcra5h@icloud.com](mailto:snowcra5h@icloud.com)
+🌨️ Tetsuo: https://www.x.com/tetsuo
  </div>
 
 ## Table of Contents
