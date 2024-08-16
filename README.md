@@ -1,6 +1,6 @@
 <div align="center">
   
-![API CheatSheets](https://github.com/7etsuo/windows-api-function-cheatsheets/assets/90065760/5cd8aa72-377b-4163-8ec9-0046bdacd5eb)
+![API CheatSheets](https://github.com/user-attachments/assets/0fcf03e5-d94e-4bba-a199-11f16c40cb0c)
 
 </div>
 
