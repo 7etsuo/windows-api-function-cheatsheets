@@ -1,6 +1,6 @@
 <div align="center">
   
-![API CheatSheets](https://github.com/user-attachments/assets/0fcf03e5-d94e-4bba-a199-11f16c40cb0c)
+![API CheatSheets](https://github.com/user-attachments/assets/628ab88c-0ddc-408d-a91e-e012c7f78a51)
 
 </div>
 
